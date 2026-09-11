@@ -14,25 +14,18 @@
 // Add-Migration <Name> --> generates migration files based on current model
 // Update-Database --> applies migration, and creattes/updates actual DB
 
-
-// !!! * I AM HERE (NEXT SESSION: Set up GIT properly (commits, branches) before continuing. After that: update CRUD methods (AddPart, DisplayParts UpdatePart, DeletePart) to use the database HarwareInventoryDBContext instead of the in-memory List<Part>.) * !!!
-// Git setup, first command: git init (run in terminal, inside the project folder)!
-
-// Add a new instance
-Part checkpartOne = new Part("RTX 4090", "GPU", 400, 5, 2);
-Part checkpartTwo = new Part("RTX 4080", "GPU", 300, 10, 5);
-Part checkpartThree = new Part("RTX 4070", "GPU", 200, 15, 5);
-
-// Add a list to store the hardware parts and loop through it to display the part information
-List<Part> hardwareParts = new List<Part>();
-hardwareParts.Add(checkpartOne);
-hardwareParts.Add(checkpartTwo);
-hardwareParts.Add(checkpartThree);
+// Phase 2 - Git setup (terminal commands used so far):
+// git init --> creates a new Git repository in this folder
+// git add . --> marks files as ready to be saved
+// git commit -m "<message>" --> actually saves the marked files, with a shot message describing what changed
+// git status --> shows what's ready to save, and what's not yet included
+// git log --> shows past saves (history)
+// git checkout -b <branch-name> --> creates a new branch and switches to it right away
 
 
 // Method definition to add a new part (C - Create)
 // Using ?? "" on ReadLine() to avoid null warnings (ReadLine() could return null)
-static Part? AddPart()
+static Part? AddPart(HardwareInventoryDBContext db)
 {
     Console.WriteLine("\nEnter  part name:");
     string name = Console.ReadLine() ?? "";
@@ -51,7 +44,14 @@ static Part? AddPart()
         Console.WriteLine("\nEnter low stock threshold:");
         int lowstockthreshold = int.Parse(Console.ReadLine() ?? "");
 
-        return new Part(name, category, price, stock, lowstockthreshold);
+        Part newPart = new Part(name, category, price, stock, lowstockthreshold);
+
+        db.Parts.Add(newPart); // marks the new part for saving
+        db.SaveChanges(); // actually writes it to the database
+        Console.WriteLine();  // blank line before success message
+        Console.WriteLine("Part added successfully.");
+
+        return newPart;
     }
     catch (FormatException)  // Bad number format (e.g., emtpy/non-numeric input)
     {
@@ -66,77 +66,91 @@ static Part? AddPart()
 }
 
 // Method definition to display the parts in the list (R - Read)
-static void DisplayParts(List<Part> parts)
+static void DisplayParts(HardwareInventoryDBContext db)
 {
-    foreach (Part p in parts)
+    // .Any() checks if the table as at least one row
+    // If it's empty, print a message and exit early - otherwise, continue down to the foreach loop
+    if (!db.Parts.Any())
     {
-        Console.WriteLine($"{p.Id } {p.Name} {p.Category} {p.Price} {p.Stock} {p.LowStockThreshold}");
+        Console.WriteLine("No parts found.");
+        return;
+    }
+
+    foreach (Part p in db.Parts)
+    {
+        Console.WriteLine($"{p.Id} {p.Name} {p.Category} {p.Price:F2} {p.Stock} {p.LowStockThreshold}"); // :F2 shows price with exactly 2 decimal places
     }
 }
-
 
 // Method defintion to update a part (U - Update)
-static void UpdatePart(List<Part> parts, int id)
+static void UpdatePart(HardwareInventoryDBContext db, int id)
 {
-    foreach (Part p in parts)
+    // Finds the first part matching this ID, or null if none found - safer than looping + modifying the mid-iteration
+    Part? p = db.Parts.FirstOrDefault(x => x.Id == id);
+
+    if (p == null)
     {
-        if (p.Id == id)
-        {
-            Console.WriteLine("\nEnter new part name:");
-            string name = Console.ReadLine() ?? "";
+        Console.WriteLine("Part with the specified ID not found.");
+        return;
+    }
 
-            Console.WriteLine("\nEnter new part category:");
-            string category = Console.ReadLine() ?? "";
+    Console.WriteLine("\nEnter new part name:");
+    string name = Console.ReadLine() ?? "";
 
-            try
-            {
-                Console.WriteLine("\nEnter new price:");
-                decimal price = decimal.Parse(Console.ReadLine() ?? "");
+    Console.WriteLine("\nEnter new part category:");
+    string category = Console.ReadLine() ?? "";
 
-                Console.WriteLine("\nEnter new stock:");
-                int stock = int.Parse(Console.ReadLine() ?? "");
+    try
+    {
+        Console.WriteLine("\nEnter new price:");
+        decimal price = decimal.Parse(Console.ReadLine() ?? "");
 
-                Console.WriteLine("\nEnter new low stock threshold:");
-                int lowstockthreshold = int.Parse(Console.ReadLine() ?? "");
+        Console.WriteLine("\nEnter new stock:");
+        int stock = int.Parse(Console.ReadLine() ?? "");
 
-                // Create a temporary Part reusing Part's constructor to check the new values are valid
-                Part validated = new Part(name, category, price, stock, lowstockthreshold);
+        Console.WriteLine("\nEnter new low stock threshold:");
+        int lowstockthreshold = int.Parse(Console.ReadLine() ?? "");
 
-                // If it gets there, validation passed - which means it's safe to update the real part
-                p.Name = validated.Name;
-                p.Category = validated.Category;
-                p.Price = validated.Price;
-                p.Stock = validated.Stock;
-                p.LowStockThreshold = validated.LowStockThreshold;
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("Invalid input: price/stock/low stock threshold must be numbers.");
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine($"Invalid input: {ex.Message}");
-            }
-        }
+        // Create a temporary Part reusing Part's constructor to check the new values are valid
+        Part validated = new Part(name, category, price, stock, lowstockthreshold);
+
+        // Constructor validated the new values (no empty name/category, no negative price/stock/threshold) - safe to copy them onto the real part
+        p.Name = validated.Name;
+        p.Category = validated.Category;
+        p.Price = validated.Price;
+        p.Stock = validated.Stock;
+        p.LowStockThreshold = validated.LowStockThreshold;
+
+        db.SaveChanges();  // saves the changes made to p above
+        Console.WriteLine("Part updated sucessfully.");
+    }
+    catch (FormatException)
+    {
+        Console.WriteLine("Invalid input: price/stock/low stock threshold must be numbers.");
+    }
+    catch (ArgumentException ex)
+    {
+        Console.WriteLine($"Invalid input: {ex.Message}");
     }
 }
 
-
-static void DeletePart(List<Part> parts, int id)
+static void DeletePart(HardwareInventoryDBContext db, int id)
 {
-    foreach (Part p in parts)
+    Part? p = db.Parts.FirstOrDefault(x => x.Id == id);
+
+    if (p == null)
     {
-        if (p.Id == id)
-        {
-            parts.Remove(p);
-            Console.WriteLine($"Part with Id {id} has ben succsesfully deleeted.");
-            return; // Exit the method loop after deleting part
-        }
+        Console.WriteLine("Part with the specified Id not found.");
+        return;
     }
 
-    // only reached if the loop finished without finding a match
-    Console.WriteLine("Part with the specified Id not found.");
+    db.Parts.Remove(p);  // marks the part to be deleted
+    db.SaveChanges();
+    Console.WriteLine($"Part with Id {id} has ben successfully deleted.");
 }
+
+// Create one database connection to use for the whole program - closes automatically when the program ends
+using HardwareInventoryDBContext db = new HardwareInventoryDBContext();
 
 // Interactive menu loop to allow the user to choose which action to perform - runs until the user selectes Exit (5)
 while (true)
@@ -147,16 +161,12 @@ while (true)
     switch (inputChoice)
     {
         case "1":
-            Part? newPart = AddPart();
-            if (newPart != null)
-            {
-                hardwareParts.Add(newPart);
-            }
+            AddPart(db);
             Console.WriteLine();
             break;
 
         case "2":
-            DisplayParts(hardwareParts);
+            DisplayParts(db);
             Console.WriteLine();
             break;
 
@@ -165,7 +175,7 @@ while (true)
             {
                 Console.WriteLine("\nEnter the Id of the part to update:");
                 int updatePartID = int.Parse(Console.ReadLine() ?? "");
-                UpdatePart(hardwareParts, updatePartID);
+                UpdatePart(db, updatePartID);
             }
             catch (FormatException)
             {
@@ -179,7 +189,7 @@ while (true)
             {
                 Console.WriteLine("\nEnter the Id of the part to delete:");
                 int deletePartID = int.Parse(Console.ReadLine() ?? "");
-                DeletePart(hardwareParts, deletePartID);
+                DeletePart(db, deletePartID);
             }
             catch (FormatException)
             {
