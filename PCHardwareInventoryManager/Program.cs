@@ -1,14 +1,15 @@
 ﻿// Progress:
 // Phase 1: Defined Part class (name, category, price, stock, low stock threhold, id), stored in a List<Part>, basic validation (no negative price/stock/low stock threshold), implemented CRUD (Create, Read, Update, Delete parts), and console menu for CRUD.
 // Phase 2: Replace in-memory List<Part> with permanent storage using SQL Server + Entity Framework Core (EF Core) - set up DbContext, connection string, migrations, and update the CRUD methods to read/write to the database instead of the list. Setup of Git also performed.
-// * !!! I AM HERE (*might need to modify later!) !!! * 
-// Phase 3:
+// Phase 3: Add search filter for parts by name and category, low stock report, sorting display output, input validation polish (duplicate name checks), and a REST API layer !!! * I AM HERE * !!!
+// Phase 4:
 
 
 // OOP pillars (Encapsulation --> Inheritance --> ...?) (*might not need to add more here, cause not needed it seems in this project):
 // Phase 1: Encapsulation - constructor validates its own data before assigning it (rejects negative price/stock/threshold, empty name/category in Part class).
-// Phase 2: Inheritance - HardwareInventoryDBContext inherits from EF Core's DbContext class, giving it built-in database functionality. !!! * I AM HERE (*missing if used here or later: Polymorphism and Abstraction) !!! *
-// Phase 3:
+// Phase 2: Inheritance - HardwareInventoryDBContext inherits from EF Core's DbContext class, giving it built-in database functionality.
+// Phase 3: !!! * I AM HERE (*missing if used here or later: Polymorphism and Abstraction) * !!!
+// Phase 4:
 
 // Phase 2 - EF Core setup (Package Manager Console):
 // Add-Migration <Name> --> generates migration files based on current model
@@ -21,6 +22,8 @@
 // git status --> shows what's ready to save, and what's not yet included
 // git log --> shows past saves (history)
 // git checkout -b <branch-name> --> creates a new branch and switches to it right away
+// git checkout master --> switches back to an existing branch
+// git merge <branch-name> --> merges another branch's changes into the current branch 
 
 
 // Method definition to add a new part (C - Create)
@@ -33,7 +36,7 @@ static Part? AddPart(HardwareInventoryDBContext db)
     Console.WriteLine("\nEnter part category:");
     string category = Console.ReadLine() ?? "" ;
 
-    try // Parse numeric input - Could throw an error if input isn't a valid number
+    try // Convert numeric input - Could throw an error if input isn't a valid number
     {
         Console.WriteLine("\nEnter price:");
         decimal price = decimal.Parse(Console.ReadLine() ?? "");
@@ -48,7 +51,6 @@ static Part? AddPart(HardwareInventoryDBContext db)
 
         db.Parts.Add(newPart); // marks the new part for saving
         db.SaveChanges(); // actually writes it to the database
-        Console.WriteLine();  // blank line before success message
         Console.WriteLine("Part added successfully.");
 
         return newPart;
@@ -68,7 +70,8 @@ static Part? AddPart(HardwareInventoryDBContext db)
 // Method definition to display the parts in the list (R - Read)
 static void DisplayParts(HardwareInventoryDBContext db)
 {
-    // .Any() checks if the table as at least one row
+    // .Any() checks if the table has at least one row
+    // ! flips .Any() so that it checks if there are no matches
     // If it's empty, print a message and exit early - otherwise, continue down to the foreach loop
     if (!db.Parts.Any())
     {
@@ -78,7 +81,7 @@ static void DisplayParts(HardwareInventoryDBContext db)
 
     foreach (Part p in db.Parts)
     {
-        Console.WriteLine($"{p.Id} {p.Name} {p.Category} {p.Price:F2} {p.Stock} {p.LowStockThreshold}"); // :F2 shows price with exactly 2 decimal places
+        Console.WriteLine($"{p.Id} | {p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}"); // :F2 shows price with exactly 2 decimal places
     }
 }
 
@@ -149,23 +152,48 @@ static void DeletePart(HardwareInventoryDBContext db, int id)
     Console.WriteLine($"Part with Id {id} has ben successfully deleted.");
 }
 
+static void SearchParts(HardwareInventoryDBContext db, string searchTerm)
+{
+    // .Where() filters parts, keeping only ones where the condition is true
+    // => means here "for each part p, check this condition"
+    // || means "or" - matches if name OR category OR both contains the search term
+    // Using .Contains() instead of == so partial matches work (e.g. "409" finds "4090")
+    var matches = db.Parts.Where(p => p.Name.ToLower().Contains(searchTerm.ToLower()) || p.Category.ToLower().Contains(searchTerm.ToLower()));
+
+    if (!matches.Any())
+    {
+        Console.WriteLine("No parts found with that name/category.");
+        return;
+    }
+    else
+    {
+        foreach(Part p in matches)
+        {
+            Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
+        }
+    }
+}
+
 // Create one database connection to use for the whole program - closes automatically when the program ends
 using HardwareInventoryDBContext db = new HardwareInventoryDBContext();
 
 // Interactive menu loop to allow the user to choose which action to perform - runs until the user selectes Exit (5)
 while (true)
 {
-    Console.WriteLine("1. Add Parts\n2. Display Parts \n3. Update Parts \n4. Delete Parts \n5. Exit Menu\n");
+    Console.WriteLine("1. Add Part \n2. Display Parts \n3. Update Parts \n4. Delete Part \n5. Search Part \n6. Exit Menu");
+    Console.WriteLine();
+    Console.Write("Enter: ");
     string inputChoice = (Console.ReadLine() ?? "").Trim(); // Included .Trim() to remove any leading/trailing whitespaces from the input
 
     switch (inputChoice)
     {
         case "1":
             AddPart(db);
-            Console.WriteLine();
+            Console.WriteLine();  // add blank line for readability
             break;
 
         case "2":
+            Console.WriteLine();
             DisplayParts(db);
             Console.WriteLine();
             break;
@@ -173,8 +201,9 @@ while (true)
         case "3":
             try
             {
-                Console.WriteLine("\nEnter the Id of the part to update:");
+                Console.Write("\nEnter the Id of the part to update: ");
                 int updatePartID = int.Parse(Console.ReadLine() ?? "");
+                Console.WriteLine();
                 UpdatePart(db, updatePartID);
             }
             catch (FormatException)
@@ -187,8 +216,9 @@ while (true)
         case "4":
             try
             {
-                Console.WriteLine("\nEnter the Id of the part to delete:");
+                Console.Write("\nEnter the Id of the part to delete: ");
                 int deletePartID = int.Parse(Console.ReadLine() ?? "");
+                Console.WriteLine();
                 DeletePart(db, deletePartID);
             }
             catch (FormatException)
@@ -199,10 +229,18 @@ while (true)
             break;
 
         case "5":
+            Console.Write("\nEnter the name/category of the part: ");
+            string searchTerm = Console.ReadLine() ?? "";
+            Console.WriteLine();
+            SearchParts(db, searchTerm);
+            Console.WriteLine();
+            break;
+
+        case "6":
             return;
 
      default:
-            Console.WriteLine("\nInvalid choice. Please enter a number between 1 and 5,");
+            Console.WriteLine("\nInvalid choice. Please enter a number between 1 and 6.");
             break;
     }
 }
