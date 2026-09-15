@@ -194,14 +194,59 @@ static void LowStockReport(HardwareInventoryDBContext db)
     }
 }
 
+static void SortParts(HardwareInventoryDBContext db)
+{
+    Console.WriteLine("Sort by:\n1. Id \n2. Name \n3. Category \n4. Price \n5. Stock \n6. Low Stock Threshold");
+    Console.Write("Enter: ");
+    string sortChoice = (Console.ReadLine() ?? "").Trim();
+
+    List<Part> parts;
+
+    switch (sortChoice)
+    {
+        case "1":
+            parts = db.Parts.OrderBy(p => p.Id).ToList();
+            break;
+
+        case "2":
+            parts = db.Parts.OrderBy(p => p.Name).ToList();
+            break;
+
+        case "3":
+            parts = db.Parts.OrderBy(p => p.Category).ToList();
+            break;
+
+        case "4":
+            parts = db.Parts.OrderBy(p => p.Price).ToList();
+            break;
+
+        case "5":
+            parts = db.Parts.OrderBy(p => p.Stock).ToList();
+            break;
+
+        case "6":
+            parts = db.Parts.OrderBy(p => p.LowStockThreshold).ToList();
+            break;
+
+        default:
+            Console.WriteLine("Invalid choice.");
+            return;
+    }
+
+    foreach (Part p in parts)
+    {
+        Console.WriteLine($"{p.Id} | {p.Name} | {p.Category} | {p.Price} | {p.Stock} | {p.LowStockThreshold}");
+    }
+}
+
 
 // Create one database connection to use for the whole program - closes automatically when the program ends
 using HardwareInventoryDBContext db = new HardwareInventoryDBContext();
 
-// Interactive menu loop to allow the user to choose which action to perform - runs until the user selectes Exit (7)
+// Interactive menu loop to allow the user to choose which action to perform - runs until the user selectes Exit (8)
 while (true)
 {
-    Console.WriteLine("1. Add Part \n2. Display Parts \n3. Update Parts \n4. Delete Part \n5. Search Part \n6. Low Stock Report \n7. Exit Menu");
+    Console.WriteLine("Choose an option:\n1. Add Part \n2. Display Parts \n3. Update Parts \n4. Delete Part \n5. Search Part \n6. Low Stock Report \n7. Sort Parts \n8. Exit Menu");
     Console.WriteLine();
     Console.Write("Enter: ");
     string inputChoice = (Console.ReadLine() ?? "").Trim(); // Included .Trim() to remove any leading/trailing whitespaces from the input
@@ -264,10 +309,16 @@ while (true)
             break;
 
         case "7":
+            Console.WriteLine();
+            SortParts(db);
+            Console.WriteLine();
+            break;
+
+        case "8":
             return;
 
      default:
-            Console.WriteLine("\nInvalid choice. Please enter a number between 1 and 7.");
+            Console.WriteLine("\nInvalid choice. Please enter a number between 1 and 8.");
             break;
     }
 }
