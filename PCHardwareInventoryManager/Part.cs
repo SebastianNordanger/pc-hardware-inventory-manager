@@ -9,7 +9,7 @@ public class Part
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public int LowStockThreshold { get; set; }
-    public int Id { get; private set; } // Private set - only this class (and EF Core) can set it, external code can never set it directly. EF Core also assigns this automatically when saved to the database
+    public int Id { get; private set; } // Private set - only this class (and EF Core) can set it, external code can never set it directly. EF Core also assigns this automatically when saved to the database.
 
     // Define constructor to initialize the properties:
     public Part(string name, string category, decimal price, int stock, int lowStockThreshold)
@@ -31,6 +31,6 @@ public class Part
         Price = price;
         Stock = stock;
         LowStockThreshold = lowStockThreshold;
-        // Id is left unset here - EF Core assigns it automatically when the part is saved to the database
+        // Id not set here - it's assigned automatically by EF Core once the part gets saved to the database
     }
 }

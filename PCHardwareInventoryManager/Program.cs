@@ -15,15 +15,21 @@
 // Add-Migration <Name> --> generates migration files based on current model
 // Update-Database --> applies migration, and creattes/updates actual DB
 
-// Phase 2 - Git setup (terminal commands used so far):
-// git init --> creates a new Git repository in this folder
+// Phase 2 - Git setup (terminal commands used so far, ordered by typical workflow):
+// git init --> creates a new Git repository in this folder (one-time only in this context, already done for this project)
+// git checkout master --> switches back to an existing branch
+// git pull --> gets the latest changes before branching
+// git checkout -b <branch-name> --> creates a new branch and switches to it right away
 // git add . --> marks files as ready to be saved
 // git commit -m "<message>" --> actually saves the marked files, with a shot message describing what changed
 // git status --> shows what's ready to save, and what's not yet included
 // git log --> shows past saves (history)
-// git checkout -b <branch-name> --> creates a new branch and switches to it right away
 // git checkout master --> switches back to an existing branch
 // git merge <branch-name> --> merges another branch's changes into the current branch 
+
+
+// !!! * I AM HERE (NEXT SESSION - add low stock report: show parts where Stock <= LowStockThreshold) * !!!
+// static void LowStockReport(HardwareInventoryDBContext db) {...}
 
 
 // Method definition to add a new part (C - Create)
@@ -165,22 +171,37 @@ static void SearchParts(HardwareInventoryDBContext db, string searchTerm)
         Console.WriteLine("No parts found with that name/category.");
         return;
     }
-    else
+
+    foreach(Part p in matches)
     {
-        foreach(Part p in matches)
-        {
-            Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
-        }
+        Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
     }
 }
+
+static void LowStockReport(HardwareInventoryDBContext db)
+{
+    var lowStockParts = db.Parts.Where(p => p.Stock <= p.LowStockThreshold).ToList();
+
+    if (!lowStockParts.Any())
+    {
+        Console.WriteLine("No parts found below the low stock threshold");
+        return;
+    }
+
+    foreach(Part p in lowStockParts)
+    {
+        Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold} ");
+    }
+}
+
 
 // Create one database connection to use for the whole program - closes automatically when the program ends
 using HardwareInventoryDBContext db = new HardwareInventoryDBContext();
 
-// Interactive menu loop to allow the user to choose which action to perform - runs until the user selectes Exit (5)
+// Interactive menu loop to allow the user to choose which action to perform - runs until the user selectes Exit (7)
 while (true)
 {
-    Console.WriteLine("1. Add Part \n2. Display Parts \n3. Update Parts \n4. Delete Part \n5. Search Part \n6. Exit Menu");
+    Console.WriteLine("1. Add Part \n2. Display Parts \n3. Update Parts \n4. Delete Part \n5. Search Part \n6. Low Stock Report \n7. Exit Menu");
     Console.WriteLine();
     Console.Write("Enter: ");
     string inputChoice = (Console.ReadLine() ?? "").Trim(); // Included .Trim() to remove any leading/trailing whitespaces from the input
@@ -237,10 +258,16 @@ while (true)
             break;
 
         case "6":
+            Console.WriteLine();
+            LowStockReport(db);
+            Console.WriteLine();
+            break;
+
+        case "7":
             return;
 
      default:
-            Console.WriteLine("\nInvalid choice. Please enter a number between 1 and 6.");
+            Console.WriteLine("\nInvalid choice. Please enter a number between 1 and 7.");
             break;
     }
 }
