@@ -1,19 +1,19 @@
 ﻿// Progress:
-// Phase 1: Defined Part class (name, category, price, stock, low stock threhold, id), stored in a List<Part>, basic validation (no negative price/stock/low stock threshold), implemented CRUD (Create, Read, Update, Delete parts), and console menu for CRUD.
+// Phase 1: Defined Part class (name, category, price, stock, low stock threshold, id), stored in a List<Part>, basic validation (no negative price/stock/low stock threshold), implemented CRUD (Create, Read, Update, Delete parts), and console menu for CRUD.
 // Phase 2: Replace in-memory List<Part> with permanent storage using SQL Server + Entity Framework Core (EF Core) - set up DbContext, connection string, migrations, and update the CRUD methods to read/write to the database instead of the list. Setup of Git also performed.
-// Phase 3: Add search filter for parts by name and category, low stock report, sorting display output, input validation polish (duplicate name checks), and a REST API layer !!! * I AM HERE * !!!
-// Phase 4:
+// Phase 3 (Last phase): Add search filter for parts by name and category, low stock report, sorting display output, input validation polish (duplicate name checks), and a REST API layer !!! * I AM HERE * !!!
 
 
 // OOP pillars (Encapsulation --> Inheritance --> ...?) (*might not need to add more here, cause not needed it seems in this project):
 // Phase 1: Encapsulation - constructor validates its own data before assigning it (rejects negative price/stock/threshold, empty name/category in Part class).
 // Phase 2: Inheritance - HardwareInventoryDBContext inherits from EF Core's DbContext class, giving it built-in database functionality.
-// Phase 3: !!! * I AM HERE (*missing if used here or later: Polymorphism and Abstraction) * !!!
-// Phase 4:
+// Phase 3 (Last phase): !!! * I AM HERE (*missing if used here or later: Polymorphism and Abstraction) * !!!
+
 
 // Phase 2 - EF Core setup (Package Manager Console):
 // Add-Migration <Name> --> generates migration files based on current model
-// Update-Database --> applies migration, and creattes/updates actual DB
+// Update-Database --> applies migration, and creates/updates actual DB
+
 
 // Phase 2 - Git setup (terminal commands used so far, ordered by typical workflow):
 // git init --> creates a new Git repository in this folder (one-time only in this context, already done for this project)
@@ -22,22 +22,34 @@
 // git checkout -b <branch-name> --> creates a new branch and switches to it right away
 // git add . --> marks files as ready to be saved
 // git commit -m "<message>" --> actually saves the marked files, with a shot message describing what changed
+// git commit --amend --no-edit --> adds any newly marked changes into the previous commit instead of creating a new one (only safe if that commit hasn't been pushed/shared yet)
 // git status --> shows what's ready to save, and what's not yet included
 // git log --> shows past saves (history)
-// git checkout master --> switches back to an existing branch
 // git merge <branch-name> --> merges another branch's changes into the current branch 
 
 
-// !!! * I AM HERE (NEXT SESSION - add low stock report: show parts where Stock <= LowStockThreshold) * !!!
-// static void LowStockReport(HardwareInventoryDBContext db) {...}
+// !!! * I AM HERE (NEXT SESSION - start setting up REST API layer, which will span over multiple sessions) * !!!
+// Goal for next session: create ASP.NET Core Web API project, reuse HardwareInventoryDBContext, and get one working endpoint (e.g. GET all parts).
+// Remaining CRUD endpoints to follow in later sessions.
+// First command next session instead of using Visual Studio's GUI: dotnet new webapi -n PCHardwareInventoryManager.Api (creates the new Web API project).
 
 
 // Method definition to add a new part (C - Create)
 // Using ?? "" on ReadLine() to avoid null warnings (ReadLine() could return null)
 static Part? AddPart(HardwareInventoryDBContext db)
 {
-    Console.WriteLine("\nEnter  part name:");
+
+    Console.WriteLine("\nEnter part name:");
     string name = Console.ReadLine() ?? "";
+
+    // .Any() checks if a part with this name already exists (case-insensitive)
+    bool nameExists = db.Parts.Any(p => p.Name.ToLower() == name.ToLower());
+
+    if (nameExists)
+    {
+        Console.WriteLine("\nA part with that name already exists.");
+        return null;
+    }
 
     Console.WriteLine("\nEnter part category:");
     string category = Console.ReadLine() ?? "" ;
@@ -61,7 +73,7 @@ static Part? AddPart(HardwareInventoryDBContext db)
 
         return newPart;
     }
-    catch (FormatException)  // Bad number format (e.g., emtpy/non-numeric input)
+    catch (FormatException)  // Bad number format (e.g., empty/non-numeric input)
     {
         Console.WriteLine("Invalid input: price/stock/low stock threshold must be numbers.");
             return null;
@@ -95,7 +107,8 @@ static void DisplayParts(HardwareInventoryDBContext db)
 static void UpdatePart(HardwareInventoryDBContext db, int id)
 {
     // Finds the first part matching this ID, or null if none found - safer than looping + modifying the mid-iteration
-    Part? p = db.Parts.FirstOrDefault(x => x.Id == id);
+    // => means here "for each part p, check this condition" (lambda)
+    Part? p = db.Parts.FirstOrDefault(p => p.Id == id);
 
     if (p == null)
     {
@@ -145,7 +158,7 @@ static void UpdatePart(HardwareInventoryDBContext db, int id)
 
 static void DeletePart(HardwareInventoryDBContext db, int id)
 {
-    Part? p = db.Parts.FirstOrDefault(x => x.Id == id);
+    Part? p = db.Parts.FirstOrDefault(p => p.Id == id);
 
     if (p == null)
     {
@@ -155,13 +168,12 @@ static void DeletePart(HardwareInventoryDBContext db, int id)
 
     db.Parts.Remove(p);  // marks the part to be deleted
     db.SaveChanges();
-    Console.WriteLine($"Part with Id {id} has ben successfully deleted.");
+    Console.WriteLine($"Part with Id {id} has been successfully deleted.");
 }
 
 static void SearchParts(HardwareInventoryDBContext db, string searchTerm)
 {
     // .Where() filters parts, keeping only ones where the condition is true
-    // => means here "for each part p, check this condition"
     // || means "or" - matches if name OR category OR both contains the search term
     // Using .Contains() instead of == so partial matches work (e.g. "409" finds "4090")
     var matches = db.Parts.Where(p => p.Name.ToLower().Contains(searchTerm.ToLower()) || p.Category.ToLower().Contains(searchTerm.ToLower()));
@@ -235,10 +247,9 @@ static void SortParts(HardwareInventoryDBContext db)
 
     foreach (Part p in parts)
     {
-        Console.WriteLine($"{p.Id} | {p.Name} | {p.Category} | {p.Price} | {p.Stock} | {p.LowStockThreshold}");
+        Console.WriteLine($"{p.Id} | {p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
     }
 }
-
 
 // Create one database connection to use for the whole program - closes automatically when the program ends
 using HardwareInventoryDBContext db = new HardwareInventoryDBContext();
