@@ -1,13 +1,25 @@
 ﻿// Progress:
-// Phase 1: Defined Part class (name, category, price, stock, low stock threshold, id), stored in a List<Part>, basic validation (no negative price/stock/low stock threshold), implemented CRUD (Create, Read, Update, Delete parts), and console menu for CRUD.
-// Phase 2: Replace in-memory List<Part> with permanent storage using SQL Server + Entity Framework Core (EF Core) - set up DbContext, connection string, migrations, and update the CRUD methods to read/write to the database instead of the list. Setup of Git also performed.
-// Phase 3 (Last phase): Add search filter for parts by name and category, low stock report, sorting display output, input validation polish (duplicate name checks), and a REST API layer !!! * I AM HERE * !!!
+// Phase 1:
+// Defined Part class (name, category, price, stock, low stock threshold, id), stored in a List<Part>, basic validation (no negative price/stock/low stock threshold), implemented CRUD (Create, Read, Update, Delete parts), and console menu for CRUD.
+
+// Phase 2:
+// Replace in-memory List<Part> with permanent storage using SQL Server + Entity Framework Core (EF Core) - set up DbContext, connection string, migrations, and update the CRUD methods to read/write to the database instead of the list. Setup of Git also performed.
+
+// Phase 3 (Last phase):
+// Add search filter for parts by name and category, low stock report, sorting display output, input validation polish (duplicate name checks),
+// and a REST API layer (Dependency Injection setup, connection string, MapControllers, CreatePart, GetAllParts, UpdatePart, DeletePart, SearchParts (with price filter), LowStockReport, and SortParts on PartsController)
 
 
-// OOP pillars (Encapsulation --> Inheritance --> ...?) (*might not need to add more here, cause not needed it seems in this project):
-// Phase 1: Encapsulation - constructor validates its own data before assigning it (rejects negative price/stock/threshold, empty name/category in Part class).
-// Phase 2: Inheritance - HardwareInventoryDBContext inherits from EF Core's DbContext class, giving it built-in database functionality.
-// Phase 3 (Last phase): !!! * I AM HERE (*missing if used here or later: Polymorphism and Abstraction) * !!!
+// OOP pillars (Encapsulation --> Inheritance --> Abstraction)
+// Phase 1:
+// Encapsulation - constructor validates its own data before assigning it (rejects negative price/stock/threshold, empty name/category in Part class).
+
+// Phase 2:
+// Inheritance - HardwareInventoryDBContext inherits from EF Core's DbContext class, giving it built-in database functionality.
+
+// Phase 3 (Last phase):
+// Abstraction - inheriting from ControllerBase gives access to Ok(), which hides the details of building an HTTP response.
+// Polymorphism - not used in this project - all four OOP pillars weren't required to naturally fit the scope, and forcing one in wouldn't add real value here
 
 
 // Phase 2 - EF Core setup (Package Manager Console):
@@ -26,12 +38,17 @@
 // git status --> shows what's ready to save, and what's not yet included
 // git log --> shows past saves (history)
 // git merge <branch-name> --> merges another branch's changes into the current branch 
+// git diff --> shows exact line-by-line changes that aren't staged/confirmed yet
 
 
-// !!! * I AM HERE (NEXT SESSION - start setting up REST API layer, which will span over multiple sessions) * !!!
-// Goal for next session: create ASP.NET Core Web API project, reuse HardwareInventoryDBContext, and get one working endpoint (e.g. GET all parts).
-// Remaining CRUD endpoints to follow in later sessions.
-// First command next session instead of using Visual Studio's GUI: dotnet new webapi -n PCHardwareInventoryManager.Api (creates the new Web API project).
+// Phase 3 - API testing (PowerShell):
+// Invoke-WebRequest -Uri <url> --> sends a GET request, returns status code + response content
+// Invoke-WebRequest -Uri <url> -Method POST -ContentType "application/json" -Body '<json>' -UseBasicParsing --> sends a POST request with a JSON body
+// Invoke-WebRequest -Uri <url> -Method PUT -ContentType "application/json" -Body '<json>' -UseBasicParsing --> sends a PUT request with a JSON body to update an existing resource
+// Invoke-WebRequest -Uri <url> -Method DELETE -UseBasicParsing --> sends a DELETE request, removes the resource (returns 204 No Content on success)
+// Invoke-WebRequest -Uri <url>?<param>=<value> -UseBasicParsing --> sends a GET request with query parameters, used for SearchParts (searchTerm, minPrive, maxPrice) and SortParts (sortChoice) - LowStockReport takes no parameters
+// | Select-Object -ExpandProperty Content --> shows only the JSON body from the response, instead of the full status/headers output
+
 
 
 // Method definition to add a new part (C - Create)
@@ -103,7 +120,7 @@ static void DisplayParts(HardwareInventoryDBContext db)
     }
 }
 
-// Method defintion to update a part (U - Update)
+// Method definition to update a part (U - Update)
 static void UpdatePart(HardwareInventoryDBContext db, int id)
 {
     // Finds the first part matching this ID, or null if none found - safer than looping + modifying the mid-iteration
@@ -143,7 +160,7 @@ static void UpdatePart(HardwareInventoryDBContext db, int id)
         p.Stock = validated.Stock;
         p.LowStockThreshold = validated.LowStockThreshold;
 
-        db.SaveChanges();  // saves the changes made to p above
+        db.SaveChanges();
         Console.WriteLine("Part updated sucessfully.");
     }
     catch (FormatException)
@@ -156,6 +173,7 @@ static void UpdatePart(HardwareInventoryDBContext db, int id)
     }
 }
 
+// Method definition to delete a part (D - Delete)
 static void DeletePart(HardwareInventoryDBContext db, int id)
 {
     Part? p = db.Parts.FirstOrDefault(p => p.Id == id);
@@ -171,6 +189,7 @@ static void DeletePart(HardwareInventoryDBContext db, int id)
     Console.WriteLine($"Part with Id {id} has been successfully deleted.");
 }
 
+// Method definition to search parts by name or category (partial text and case-insensitive match)
 static void SearchParts(HardwareInventoryDBContext db, string searchTerm)
 {
     // .Where() filters parts, keeping only ones where the condition is true
@@ -178,18 +197,36 @@ static void SearchParts(HardwareInventoryDBContext db, string searchTerm)
     // Using .Contains() instead of == so partial matches work (e.g. "409" finds "4090")
     var matches = db.Parts.Where(p => p.Name.ToLower().Contains(searchTerm.ToLower()) || p.Category.ToLower().Contains(searchTerm.ToLower()));
 
-    if (!matches.Any())
+    // Ask for optional price range - leave blank to skip either filter
+    Console.Write("Min price (leave blank to skip): ");
+    string minInput = (Console.ReadLine() ?? "").Trim();
+    if (decimal.TryParse(minInput, out decimal minPrice))
+    {
+        matches = matches.Where(p => p.Price >= minPrice);
+    }
+
+    Console.Write("Max price (leave blank to skip): ");
+    string maxInput = (Console.ReadLine() ?? "").Trim();
+    if (decimal.TryParse(maxInput, out decimal maxPrice))
+    {
+        matches = matches.Where(p => p.Price <= maxPrice);
+    }
+
+    var result = matches.ToList();
+
+    if (!result.Any())
     {
         Console.WriteLine("No parts found with that name/category.");
         return;
     }
 
-    foreach(Part p in matches)
+    foreach(Part p in result)
     {
         Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
     }
 }
 
+// Method definition to report parts at or below stock threshold
 static void LowStockReport(HardwareInventoryDBContext db)
 {
     var lowStockParts = db.Parts.Where(p => p.Stock <= p.LowStockThreshold).ToList();
@@ -206,6 +243,7 @@ static void LowStockReport(HardwareInventoryDBContext db)
     }
 }
 
+// Method definition to sort and dispaly parts by a chosen field
 static void SortParts(HardwareInventoryDBContext db)
 {
     Console.WriteLine("Sort by:\n1. Id \n2. Name \n3. Category \n4. Price \n5. Stock \n6. Low Stock Threshold");
@@ -306,7 +344,7 @@ while (true)
             break;
 
         case "5":
-            Console.Write("\nEnter the name/category of the part: ");
+            Console.Write("\nEnter the name/category of the part (price range prompts will follow): ");
             string searchTerm = Console.ReadLine() ?? "";
             Console.WriteLine();
             SearchParts(db, searchTerm);

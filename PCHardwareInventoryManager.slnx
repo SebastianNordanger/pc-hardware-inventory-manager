@@ -2,5 +2,6 @@
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
   </Folder>
+  <Project Path="PCHardwareInventoryManager.Api/PCHardwareInventoryManager.Api.csproj" />
   <Project Path="PCHardwareInventoryManager/PCHardwareInventoryManager.csproj" />
 </Solution>
