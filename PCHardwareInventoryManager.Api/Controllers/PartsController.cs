@@ -75,7 +75,7 @@ namespace PCHardWareInventoryManager.Api.Controllers
 
         }
 
-        // Method defintion to handle GET requests for api/parts/search?searchTerm=... (search by name or category, partial/case-insenstive match)
+        // Method defintion to handle GET requests for api/parts/search?searchTerm=... (search by name or category, partial/case-insenstive match, minPrice/maxPrice are optional)
         [HttpGet("search")]
         public IActionResult SearchParts([FromQuery] string searchTerm, [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice)
         {
