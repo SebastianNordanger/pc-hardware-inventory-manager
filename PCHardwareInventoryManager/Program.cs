@@ -46,7 +46,7 @@
 // Invoke-WebRequest -Uri <url> -Method POST -ContentType "application/json" -Body '<json>' -UseBasicParsing --> sends a POST request with a JSON body
 // Invoke-WebRequest -Uri <url> -Method PUT -ContentType "application/json" -Body '<json>' -UseBasicParsing --> sends a PUT request with a JSON body to update an existing resource
 // Invoke-WebRequest -Uri <url> -Method DELETE -UseBasicParsing --> sends a DELETE request, removes the resource (returns 204 No Content on success)
-// Invoke-WebRequest -Uri <url>?<param>=<value> -UseBasicParsing --> sends a GET request with query parameters, used for SearchParts (searchTerm, minPrive, maxPrice) and SortParts (sortChoice) - LowStockReport takes no parameters
+// Invoke-WebRequest -Uri <url>?<param>=<value> -UseBasicParsing --> sends a GET request with query parameters, used for SearchParts (searchTerm, minPrice, maxPrice) and SortParts (sortChoice) - LowStockReport takes no parameters
 // | Select-Object -ExpandProperty Content --> shows only the JSON body from the response, instead of the full status/headers output
 
 
