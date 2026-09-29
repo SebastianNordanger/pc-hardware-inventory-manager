@@ -61,6 +61,9 @@
 // GET /api/parts/sorted?sortChoice=... -> sorts parts by a chosen field
 
 
+// Also added Swagger UI (/swagger) afterward, for interactively browsing/testing endpoints in the browser as an alternative to PowerShell.
+
+
 // Method definition to add a new part (C - Create)
 // Using ?? "" on ReadLine() to avoid null warnings (ReadLine() could return null)
 static Part? AddPart(HardwareInventoryDBContext db)
