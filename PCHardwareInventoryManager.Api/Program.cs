@@ -10,7 +10,18 @@ builder.Services.AddControllers();
 // Register HardwareInventoryDBContext with Dependency Injection so controllers can just ask for it in their constructor instead of doing "new HardwareInventoryDBContext()" themselves
 builder.Services.AddDbContext<HardwareInventoryDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register Swagger services - enables browse/test of API interactively in the browser instead of PowerShell
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build(); // Configuration is done - this builds the actual app object
+
+// Enable Swagger UI, only when running locally in development - hidden in a real deployed/production app for security
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 // Maps controller [HttpPost]/[HttpGet]/[HttpPut]/[HttpDelete] attributes to real routes
 // Without this, PartsController exists in code but isn't reachable via HTTP
