@@ -10,6 +10,7 @@ A C# console app and REST API for managing PC hardware inventory, using Entity F
 - Sort parts by any field (Id, Name, Category, Price, Stock, Low Stock Threshold)
 - REST API built with ASP.NET Core (Dependency Injection, EF Core integration)
 - Input validation (rejects negative values, empty fields, duplicate part names)
+- Docker Compose setup, the API and SQL Server run as two containers
 
 ## How to run
 
@@ -30,7 +31,15 @@ A C# console app and REST API for managing PC hardware inventory, using Entity F
    - `GET /api/parts/low-stock` - list parts at or below their stock threshold
    - `GET /api/parts/sorted?sortChoice=...` - sort by a chosen field
 
-**Requirements:** SQL Server (LocalDB is fine) - update the connection string in `appsettings.json` / `OnConfiguring` if needed.
+**With Docker:**
+1. Install and start Docker Desktop
+2. In the repo root, run `docker compose up --build -d`
+3. The API runs on `http://localhost:8080`, and Swagger UI is at `http://localhost:8080/swagger`
+4. Stop it with `docker compose down`
+
+The Docker database is separate from LocalDB, so it starts empty.
+
+**Requirements:** SQL Server (LocalDB is fine) for the console app and the Visual Studio run, or Docker Desktop for the Docker setup. The console app's connection string is in `OnConfiguring`, the API's is in the `appsettings.json`.
 
 ## Built with
-C#, .NET, Entity Framework Core, ASP.NET Core, SQL Server
+C#, .NET, Entity Framework Core, ASP.NET Core, SQL Server, Docker
