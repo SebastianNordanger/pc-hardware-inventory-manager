@@ -15,9 +15,13 @@ public class HardwareInventoryDBContext : DbContext
     {
     }
 
-    // Fallback configuration used when no options are passed in (e.g. by the console app, which calls "new HardwareInventoryDBContext()" with no arguments)
+    // Fallback used when no options are passed in (e.g. by the console app, which calls "new HardwareInventoryDBContext()" )
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=PCHardwareInventoryManagerDB;Trusted_Connection=True;");
+        // Skip the fallback if the API already set up the database connection itself
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=PCHardwareInventoryManagerDB;Trusted_Connection=True;");
+        }
     }
 }

@@ -16,6 +16,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build(); // Configuration is done - this builds the actual app object
 
+// Applies any pending migrations on startup - the Docker database starts empty, so this creates the tables
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<HardwareInventoryDBContext>();
+    db.Database.Migrate();
+}    
+
 // Enable Swagger UI, only when running locally in development - hidden in a real deployed/production app for security
 if (app.Environment.IsDevelopment())
 {

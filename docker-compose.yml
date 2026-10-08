@@ -1,0 +1,19 @@
+services:
+    # The API container - builds from the Dockerfile and connects to the db container
+    api:
+        build: .
+        ports:
+            - "8080:8080"
+        depends_on:
+            - db
+        environment:
+            - ConnectionStrings__DefaultConnection=Server=db;Database=PCHardwareInventoryManagerDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
+
+    # The SQL Server container - runs the actual database the API connects to
+    db:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        environment:
+            - ACCEPT_EULA=Y
+            - MSSQL_SA_PASSWORD=YourStrong!Passw0rd
+        ports:
+            - "1433:1433"

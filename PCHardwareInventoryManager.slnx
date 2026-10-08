@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
+    <File Path="docker-compose.yml" />
+    <File Path="Dockerfile" />
   </Folder>
   <Project Path="PCHardwareInventoryManager.Api/PCHardwareInventoryManager.Api.csproj" />
   <Project Path="PCHardwareInventoryManager/PCHardwareInventoryManager.csproj" />

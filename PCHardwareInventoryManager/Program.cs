@@ -7,7 +7,7 @@
 
 // Phase 3 (Last phase):
 // Add search filter for parts by name and category, low stock report, sorting display output, input validation polish (duplicate name checks),
-// and a REST API layer (Dependency Injection setup, connection string, MapControllers, CreatePart, GetAllParts, UpdatePart, DeletePart, SearchParts (with price filter), LowStockReport, and SortParts on PartsController)
+// a REST API layer (Dependency Injection setup, connection string, MapControllers, CreatePart, GetAllParts, UpdatePart, DeletePart, SearchParts (with price filter), LowStockReport, and SortParts on PartsController), and Docker Compose (API + SQL Server as two containers).
 
 
 // OOP pillars (Encapsulation -> Inheritance -> Abstraction)
@@ -51,6 +51,25 @@
 // | Select-Object -ExpandProperty Content -> shows only the JSON body from the response, instead of the full status/headers output
 
 
+// Phase 3 - Docker commands used (API + SQL Server as two containers via Docker Compose):
+// docker compose up --build -d -> builds the API image and starts both containers in the background
+// docker compose up -d db -> starts only the database container (used to test it on its own)
+// docker ps -> lists running containers
+// docker compose logs api -> shows the API container's output (used to find startup errors)
+// docker compose start db -> starts the stopped database container (keeps its data)
+// docker compose stop db -> stops the database container without removing it (keeps its data)
+// docker compose down -> stops and removes the containers (and the test data inside them)
+
+
+// Phase 3 - Docker notes:
+// The API reaches the database by the service name "db" (defined in docker-compose.yml), not localhost
+// OnConfiguring only uses the LocalDB fallback if nothing else was configured (IsConfigured), because it overrode the Docker connection string and crashed with "LocalDB is not supported on this platform"
+// Removed the console project's unused appsettings.json (the console app uses a hardcoded connection string), it clashed with the API's appsettings.json when publishing
+// The API runs Database.Migrate() on startup because the Docker database starts empty
+// The console app still uses LocalDB, the Docker database is separate (test data only)
+// The Dockerfile sets ASPNETCORE_ENVIRONMENT=Development so Swagger UI works in the container
+
+
 // Endpoints:
 // GET /api/parts -> returns all parts
 // POST /api/parts -> creates a new part
@@ -61,7 +80,7 @@
 // GET /api/parts/sorted?sortChoice=... -> sorts parts by a chosen field
 
 
-// Also added Swagger UI (/swagger) afterward, for interactively browsing/testing endpoints in the browser as an alternative to PowerShell.
+// Also added Swagger UI (/swagger) afterward, for interactively browsing/testing endpoints in the browser as an alternative to PowerShell (in Docker: http://localhost:8080/swagger).
 
 
 // Method definition to add a new part (C - Create)
