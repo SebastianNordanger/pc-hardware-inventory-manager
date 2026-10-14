@@ -37,7 +37,7 @@ A C# console app and REST API for managing PC hardware inventory, using Entity F
 3. The API runs on `http://localhost:8080`, and Swagger UI is at `http://localhost:8080/swagger`
 4. Stop it with `docker compose down`
 
-The Docker database is separate from LocalDB, so it starts empty.
+The Docker database is separate from LocalDB, so it starts empty, and `docker compose down` removes the containers and the data inside them.
 
 **Requirements:** SQL Server (LocalDB is fine) for the console app and the Visual Studio run, or Docker Desktop for the Docker setup. The console app's connection string is in `OnConfiguring`, the API's is in the `appsettings.json`.
 
