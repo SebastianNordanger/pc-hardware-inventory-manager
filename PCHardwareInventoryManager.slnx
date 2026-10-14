@@ -3,6 +3,7 @@
     <File Path=".gitignore" />
     <File Path="docker-compose.yml" />
     <File Path="Dockerfile" />
+    <File Path="pc_hardware_inventory_screenshot.png" />
     <File Path="README.md" />
   </Folder>
   <Project Path="PCHardwareInventoryManager.Api/PCHardwareInventoryManager.Api.csproj" />
