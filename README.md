@@ -2,6 +2,8 @@
 
 A C# console app and REST API for managing PC hardware inventory, using Entity Framework Core and SQL Server for permanent storage.
 
+<p align="center"><img src="pc_hardware_inventory_screenshot.png" alt="PC Hardware Inventory Manager screenshot"></p>
+
 ## Features
 
 - Full CRUD operations (Create, Read, Update, Delete) on inventory parts
