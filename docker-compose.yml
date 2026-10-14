@@ -3,7 +3,7 @@ services:
     api:
         build: .
         ports:
-            - "8080:8080"
+            - "127.0.0.1:8080:8080" # Only reachable from this PC
         depends_on:
             - db
         environment:
@@ -16,4 +16,4 @@ services:
             - ACCEPT_EULA=Y
             - MSSQL_SA_PASSWORD=YourStrong!Passw0rd
         ports:
-            - "1433:1433"
+            - "127.0.0.1:1433:1433" # Only reachable from this PC
