@@ -16,7 +16,7 @@ static Part? AddPart(HardwareInventoryDBContext db)
     }
 
     Console.WriteLine("\nEnter part category:");
-    string category = Console.ReadLine() ?? "" ;
+    string category = Console.ReadLine() ?? "";
 
     try // Convert numeric input - Could throw an error if input isn't a valid number
     {
@@ -40,7 +40,7 @@ static Part? AddPart(HardwareInventoryDBContext db)
     catch (FormatException)  // Bad number format (e.g., empty/non-numeric input)
     {
         Console.WriteLine("Invalid input: price/stock/low stock threshold must be numbers.");
-            return null;
+        return null;
     }
     catch (ArgumentException ex)  // Part constructor rejected invalid values
     {
@@ -60,6 +60,8 @@ static void DisplayParts(HardwareInventoryDBContext db)
         Console.WriteLine("No parts found.");
         return;
     }
+
+    Console.WriteLine("Id | Name | Category | Price | Stock | Low Stock Threshold");
 
     foreach (Part p in db.Parts)
     {
@@ -108,7 +110,7 @@ static void UpdatePart(HardwareInventoryDBContext db, int id)
         p.LowStockThreshold = validated.LowStockThreshold;
 
         db.SaveChanges();
-        Console.WriteLine("Part updated sucessfully.");
+        Console.WriteLine("Part updated successfully.");
     }
     catch (FormatException)
     {
@@ -167,6 +169,8 @@ static void SearchParts(HardwareInventoryDBContext db, string searchTerm)
         return;
     }
 
+    Console.WriteLine("Name | Category | Price | Stock | Low Stock Threshold");
+
     foreach(Part p in result)
     {
         Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
@@ -184,13 +188,15 @@ static void LowStockReport(HardwareInventoryDBContext db)
         return;
     }
 
+    Console.WriteLine("Name | Category | Price | Stock | Low Stock Threshold");
+
     foreach(Part p in lowStockParts)
     {
-        Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold} ");
+        Console.WriteLine($"{p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
     }
 }
 
-// Method definition to sort and dispaly parts by a chosen field
+// Method definition to sort and display parts by a chosen field
 static void SortParts(HardwareInventoryDBContext db)
 {
     Console.WriteLine("Sort by:\n1. Id \n2. Name \n3. Category \n4. Price \n5. Stock \n6. Low Stock Threshold");
@@ -230,6 +236,8 @@ static void SortParts(HardwareInventoryDBContext db)
             return;
     }
 
+    Console.WriteLine("Id | Name | Category | Price | Stock | Low Stock Threshold");
+
     foreach (Part p in parts)
     {
         Console.WriteLine($"{p.Id} | {p.Name} | {p.Category} | {p.Price:F2} | {p.Stock} | {p.LowStockThreshold}");
@@ -239,7 +247,7 @@ static void SortParts(HardwareInventoryDBContext db)
 // Create one database connection to use for the whole program - closes automatically when the program ends
 using HardwareInventoryDBContext db = new HardwareInventoryDBContext();
 
-// Interactive menu loop to allow the user to choose which action to perform - runs until the user selectes Exit (8)
+// Interactive menu loop to allow the user to choose which action to perform - runs until the user selects Exit (8)
 while (true)
 {
     Console.WriteLine("Choose an option:\n1. Add Part \n2. Display Parts \n3. Update Parts \n4. Delete Part \n5. Search Part \n6. Low Stock Report \n7. Sort Parts \n8. Exit Menu");
@@ -313,7 +321,7 @@ while (true)
         case "8":
             return;
 
-     default:
+        default:
             Console.WriteLine("\nInvalid choice. Please enter a number between 1 and 8.");
             break;
     }
