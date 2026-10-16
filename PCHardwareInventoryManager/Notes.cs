@@ -34,10 +34,11 @@
 // git pull -> gets the latest changes before branching
 // git checkout -b <branch-name> -> creates a new branch and switches to it right away
 // git add . -> marks files as ready to be saved
-// git commit -m "<message>" -> actually saves the marked files, with a shot message describing what changed
+// git commit -m "<message>" -> actually saves the marked files, with a short message describing what changed
 // git commit --amend --no-edit -> adds any newly marked changes into the previous commit instead of creating a new one (only safe if that commit hasn't been pushed/shared yet)
 // git status -> shows what's ready to save, and what's not yet included
 // git log -> shows past saves (history)
+// git log --oneline -3 -> shows the last 3 commits, one line each
 // git merge <branch-name> -> merges another branch's changes into the current branch 
 // git diff -> shows exact line-by-line changes that aren't staged/confirmed yet
 
